@@ -4,7 +4,6 @@ from aiohttp.web_request import Request
 from aiohttp.web_response import StreamResponse
 
 if TYPE_CHECKING:
-    F = TypeVar("F", bound=Callable[..., Any])
     middleware: Callable[[F], F]
 else:
     try:
@@ -21,7 +20,6 @@ Middleware = Callable[[Request, Handler], Awaitable[StreamResponse]]
 def cors(allow_headers: Iterable[str]) -> Middleware:
     @middleware
     async def impl(request: Request, handler: Handler) -> StreamResponse:
-        is_options = request.method == "OPTIONS"
         is_preflight = is_options and "Access-Control-Request-Method" in request.headers
         if is_preflight:
             resp = StreamResponse()
@@ -33,7 +31,6 @@ def cors(allow_headers: Iterable[str]) -> Middleware:
             return resp
 
         resp.headers["Access-Control-Allow-Origin"] = "*"
-        resp.headers["Access-Control-Expose-Headers"] = "*"
         if is_options:
             resp.headers["Access-Control-Allow-Headers"] = ", ".join(allow_headers)
             resp.headers["Access-Control-Allow-Methods"] = ", ".join(
